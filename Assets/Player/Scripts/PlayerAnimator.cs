@@ -24,7 +24,7 @@ public class PlayerAnimator : MonoBehaviour
         movePlayer = GetComponent<MovePlayer>();
 
         movePlayer.StartedJump += MovePlayer_StartedJump;
-        movePlayer.StartedFall += MovePlayer_StartedFall;
+        movePlayer.FallingBoolChanged += MovePlayer_StartedFall;
         movePlayer.Landed += MovePlayer_Landed;
     }
 
@@ -45,6 +45,9 @@ public class PlayerAnimator : MonoBehaviour
         // Pethagoreas to get strength
         movementDiff = movement.sqrMagnitude;
 
+        if (movementDiff == 0)
+            isRunning = false;
+
         //Animate
         animator.SetFloat("Movement", movementDiff);
         animator.SetBool("Running", isRunning);
@@ -55,9 +58,9 @@ public class PlayerAnimator : MonoBehaviour
         animator.SetTrigger("Jump");
     }
 
-    private void MovePlayer_StartedFall()
+    private void MovePlayer_StartedFall(bool status)
     {
-        animator.SetTrigger("Falling");
+        animator.SetBool("Falling", status);
     }
 
     private void MovePlayer_Landed()

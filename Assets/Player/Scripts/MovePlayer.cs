@@ -38,12 +38,28 @@ public class MovePlayer : MonoBehaviour
     public delegate void StartJumping();
     public event StartJumping StartedJump;
 
-    public delegate void StartFalling();
-    public event StartFalling StartedFall;
-
     public delegate void Landing();
     public event Landing Landed;
 
+    public delegate void FallingChangedEvent(bool status);
+    public event FallingChangedEvent FallingBoolChanged;
+
+    public bool isFalling; // Walked off the edge
+    public bool IsFalling
+    {
+        get
+        {
+            return isFalling;
+        }
+        set
+        {
+            isFalling = value;
+            if (FallingBoolChanged != null)
+            {
+                FallingBoolChanged(isFalling);
+            }
+        }
+    }
 
     // Start is called before the first frame update
     void Start()
@@ -220,6 +236,8 @@ public class MovePlayer : MonoBehaviour
             {
                 trackJumpFall = false;
             }
+
+            isFalling = false;
         }
     }
 
@@ -231,24 +249,26 @@ public class MovePlayer : MonoBehaviour
             if (Physics.Raycast(Player.transform.position, Vector3.down, 0.5f))
             {
                 Landed?.Invoke();
+                isFalling = false;
+                trackJumpFall = false;
+                Debug.Log("Touching! " + Time.time);
             }
         }
 
         // Walked from edge (to fall) detect
         if (!cc.isGrounded && !isJumping)
         {
-            trackJumpFall = true;
-            StartedFall?.Invoke();
+            isFalling = true;
         }
 
         // At the highest point of the Jump detect
         if (velocity.y < 0 && isJumping)
         {
             isJumping = false;
-            StartedFall?.Invoke();
+            isFalling = true;
 
             trackJumpFall = true;
-        }   
+        }
     }
 }
 
