@@ -47,12 +47,12 @@ public class PlayerAnimator : MonoBehaviour
 
         //Animate
         animator.SetFloat("Movement", movementDiff);
-        animator.SetBool("IsRunning", isRunning);
+        animator.SetBool("Running", isRunning);
     }
 
     private void MovePlayer_StartedJump()
     {
-        animator.SetTrigger("PrepJump");
+        animator.SetTrigger("Jump");
     }
 
     private void MovePlayer_StartedFall()
