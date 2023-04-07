@@ -39,9 +39,14 @@ public class PlayerAnimator : MonoBehaviour
         movement = director.movementInput;
         isRunning = director.isHoldingRun;
 
+        //Calculate Vector2 Movement Direction
+        float movementDiff = 0f;
+
+        // Pethagoreas to get strength
+        movementDiff = movement.sqrMagnitude;
+
         //Animate
-        animator.SetFloat("XMovement", movement.x);
-        animator.SetFloat("YMovement", movement.y);
+        animator.SetFloat("Movement", movementDiff);
         animator.SetBool("IsRunning", isRunning);
     }
 

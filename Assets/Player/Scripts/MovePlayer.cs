@@ -248,7 +248,7 @@ public class MovePlayer : MonoBehaviour
             StartedFall?.Invoke();
 
             trackJumpFall = true;
-        }
+        }   
     }
 }
 
