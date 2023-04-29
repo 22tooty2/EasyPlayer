@@ -24,6 +24,10 @@ public class InputDirector : MonoBehaviour
 
     public bool isHoldingRun = false;
 
+    //Helpers
+    public bool canLook;
+    public bool canMove;
+
     public void StartMoving()
     {
         InputActions = new inputActionAsset();
@@ -35,8 +39,8 @@ public class InputDirector : MonoBehaviour
 
         InputActions.MovingPlayer.ToggleRun.performed += ctx => isHoldingRun = !isHoldingRun;
 
-        Cursor.visible = false;
-        Cursor.lockState = CursorLockMode.Locked;
+        StarterManager.activatePlayer += EnableLooking;
+        StarterManager.activatePlayer += EnableMoving;
     }
 
     // Start is called before the first frame update
@@ -48,7 +52,10 @@ public class InputDirector : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        movementInput = InputActions.MovingPlayer.Movement.ReadValue<Vector2>();
+        if (canMove)
+            movementInput = InputActions.MovingPlayer.Movement.ReadValue<Vector2>();
+        else
+            movementInput = Vector2.zero;
 
         if (!IsController)
         {
@@ -56,6 +63,21 @@ public class InputDirector : MonoBehaviour
             isHoldingRun = runValue > 0; // On the line before this one, if NOT holding run and run value <= 0 the player just stopped running.
         }
 
-        cameraInput = InputActions.MovingPlayer.Mouse.ReadValue<Vector2>();
+        if (canLook)
+            cameraInput = InputActions.MovingPlayer.Mouse.ReadValue<Vector2>();
+        else
+            cameraInput = Vector2.zero;
+    }
+
+    void EnableLooking()
+    {
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
+        canLook = true;
+    }
+
+    void EnableMoving()
+    {
+        canMove = true;
     }
 }

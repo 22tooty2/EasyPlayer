@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MovePlayer : MonoBehaviour
+public class RBMovePlayer : MonoBehaviour
 {
     //Crown
     public Vector3 MoveValue;
@@ -11,7 +11,7 @@ public class MovePlayer : MonoBehaviour
 
     //Servants
     [SerializeField] GameObject Player;
-    CharacterController cc;
+    Rigidbody rb;
 
     InputDirector director;
     CameraController camControl;
@@ -25,6 +25,8 @@ public class MovePlayer : MonoBehaviour
 
     public bool isJumping;
     public bool trackJumpFall; // To change and detect when landed
+    public bool _isGrounded;
+    public LayerMask groundMask;
 
     //Helpers
     Vector3 currentTargetRotation;
@@ -72,7 +74,7 @@ public class MovePlayer : MonoBehaviour
         director = GetComponent<InputDirector>();
         camControl = GetComponent<CameraController>();
         MyCamera = camControl.MyCamera;
-        cc = Player.GetComponent<CharacterController>();
+        rb = Player.GetComponent<Rigidbody>();
 
         director.JumpPressed += Jump;
         StarterManager.knockbackPlayer += knockback;
@@ -81,10 +83,11 @@ public class MovePlayer : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        _isGrounded = isGrounded();
         calculateMovement();
         calculateGravity();
         ExtraDetectables();
-        cc.Move(MoveValue);
+        rb.AddForce(MoveValue);
     }
 
     private void calculateMovement()
@@ -100,7 +103,7 @@ public class MovePlayer : MonoBehaviour
         Vector3 RightDirection = camControl.cameraController.transform.right;
 
         // Get Input direction
-        Direction =  new Vector3(director.movementInput.x, 0f, director.movementInput.y);
+        Direction = new Vector3(director.movementInput.x, 0f, director.movementInput.y);
 
         // For rotating the player (towards the camera direction)
         float targetRotation = RotatePlayer(Direction);
@@ -212,19 +215,19 @@ public class MovePlayer : MonoBehaviour
     }
 
     private void calculateGravity()
-    {   
-        if (!cc.isGrounded)
-            velocity.y -= Gravity * Time.deltaTime;
+    {
+        if (!_isGrounded)
+            rb.AddForce(Vector3.down * Gravity * Time.deltaTime);
 
         StayOnGround(); // The player will have the default gravity if on ground.
 
-        MoveValue.y = velocity.y * Time.deltaTime;
+        //MoveValue.y = velocity.y * Time.deltaTime;
     }
 
     // Jump
     void Jump()
     {
-        if (cc.isGrounded && !isJumping)
+        if (_isGrounded && !isJumping)
         {
             isJumping = true;
             velocity.y = Mathf.Sqrt(2f * JumpHeight * Gravity);
@@ -234,9 +237,11 @@ public class MovePlayer : MonoBehaviour
 
     void StayOnGround()
     {
-        if (cc.isGrounded && velocity.y < 0 && !isJumping)
+        if (_isGrounded && rb.velocity.y < 0 && !isJumping)
         {
-            velocity.y = GROUNDED_THRESHOLD;
+            Vector3 tempVelocity = rb.velocity;
+            tempVelocity.y = GROUNDED_THRESHOLD;
+            rb.velocity = tempVelocity;
 
             if (trackJumpFall)
             {
@@ -262,7 +267,7 @@ public class MovePlayer : MonoBehaviour
         }
 
         // Walked from edge (to fall) detect
-        if (!cc.isGrounded && !isJumping)
+        if (!_isGrounded && !isJumping)
         {
             isFalling = true;
         }
@@ -300,7 +305,19 @@ public class MovePlayer : MonoBehaviour
         velocity += knockbackPower;
         Debug.Log(knockbackPower);
     }
+
+    bool isGrounded()
+    {
+        bool grounded = Physics.CheckSphere(gameObject.transform.position, 0.1f, groundMask);
+
+        RaycastHit hit;
+        if (grounded && Physics.Raycast(gameObject.transform.position, Vector3.down, out hit, 0.2f, groundMask))
+        {
+            gameObject.GetComponentInParent<PlayerInfo>().isGrounded = true;
+            return true;
+        }
+
+        gameObject.GetComponentInParent<PlayerInfo>().isGrounded = false;
+        return false;
+    }
 }
-
-
-
